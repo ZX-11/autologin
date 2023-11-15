@@ -60,11 +60,7 @@ int main(int argc, char* argv[]) {
 						argv[1], urlencode(argv[2]));
 
 				char* result = GET("10.10.43.3", buf);
-				if (strstr(result, "\"result\":1")) {
-					puts("自动登录成功");
-				} else {
-					puts("登录失败");
-				}
+				puts(strstr(result, "\"result\":1") ? "自动登录成功" : "登录失败");
 			}
 		}
 		sleep(10);
