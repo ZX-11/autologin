@@ -52,15 +52,12 @@ int main(int argc, char* argv[]) {
 		char* resp = GET("10.10.43.3", "/");
 		if (resp) {
 			if (strstr(resp, "Dr.COMWebLoginID_0.htm")) {
-				sprintf(buf,
-						"/drcom/"
+				sprintf(buf, "/drcom/"
 						"login?callback=dr1003&DDDDD=%s&upass=%s&0MKKey=123456&"
 						"R1=0&R2=&R3=0&R6=0&para=00&v6ip=&terminal_type=1&lang="
 						"zh-cn&jsVersion=4.2.1&v=8321&lang=zh",
 						argv[1], urlencode(argv[2]));
-
-				char* result = GET("10.10.43.3", buf);
-				puts(strstr(result, "\"result\":1") ? "自动登录成功" : "登录失败");
+				puts(strstr(GET("10.10.43.3", buf), "\"result\":1") ? "自动登录成功" : "登录失败");
 			}
 		}
 		sleep(10);
