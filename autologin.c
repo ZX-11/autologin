@@ -28,9 +28,9 @@ char* GET(char* hostname, char* path) {
 	return buf;
 }
 
-char* urlencode(const char* src) {
+char* urlencode(const unsigned char* src) {
 	static char buf[64], temp[8];
-	for (unsigned char* dest = buf; *src || (*dest = 0); src++) {
+	for (char* dest = buf; *src || (*dest = 0); src++) {
 		if (isalnum(*src)) {
 			*dest++ = *src;
 		} else {
