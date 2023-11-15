@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 		puts("usage: autologin [username] [password]");
 		return 0;
 	}
-	static char buf[1024];
+	static char buf[256];
 	for (;;) {
 		char* resp = GET("10.10.43.3", "/");
 		if (resp && strstr(resp, "Dr.COMWebLoginID_0.htm")) {
