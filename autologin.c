@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -29,35 +30,34 @@ char* GET(char* hostname, char* path) {
 }
 
 char* urlencode(const unsigned char* src) {
-	static char buf[64], temp[8];
+	static char buf[64];
 	for (char* dest = buf; *src || (*dest = 0); src++) {
 		if (isalnum(*src)) {
 			*dest++ = *src;
 		} else {
-			int len = sprintf(temp, "%%%x", *src);
-			strcpy(dest, temp);
-			dest += len;
+			dest += sprintf(dest, "%%%x", *src);
 		}
 	}
 	return buf;
 }
 
 int main(int argc, char* argv[]) {
-	if (argc != 3) {
-		puts("usage: autologin [username] [password]");
+	if (argc < 3) {
+		puts("usage: autologin [username] [password] [interval (optional, default 10, in seconds)]");
 		return 0;
 	}
 	static char buf[256];
-	for (;;) {
-		char* resp = GET("10.10.43.3", "/");
-		if (resp && strstr(resp, "Dr.COMWebLoginID_0.htm")) {
+	int interval = argc == 4 ? atoi(argv[3]) : 10;
+	for (char *resp, *result; ; sleep(interval)) {
+		if ((resp = GET("10.10.43.3", "/")) && (result = strstr(resp, "Dr.COMWebLoginID")) && result[17] == '0') {
 			sprintf(buf, "/drcom/"
-					"login?callback=dr1003&DDDDD=%s&upass=%s&0MKKey=123456&"
-					"R1=0&R2=&R3=0&R6=0&para=00&v6ip=&terminal_type=1&lang="
-					"zh-cn&jsVersion=4.2.1&v=8321&lang=zh",
-					argv[1], urlencode(argv[2]));
-			puts(strstr(GET("10.10.43.3", buf), "\"result\":1") ? "自动登录成功" : "登录失败");
+				"login?callback=dr1003&DDDDD=%s&upass=%s&0MKKey=123456&"
+				"R1=0&R2=&R3=0&R6=0&para=00&v6ip=&terminal_type=1&lang="
+				"zh-cn&jsVersion=4.2.1&v=8321&lang=zh",
+				argv[1], urlencode(argv[2]));
+			time_t t = time(NULL);
+			fputs(ctime(&t), stdout);
+			puts((result = strstr(GET("10.10.43.3", buf), "result")) && result[8] == '1' ? "自动登录成功" : "登录失败");
 		}
-		sleep(10);
 	}
 }
