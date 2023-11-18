@@ -26,17 +26,17 @@ static __attribute__((destructor)) void _clean() { WSACleanup(); }
 typedef int socket_t;
 #endif
 
-char* GET(char* hostname, char* path) {
+char* GET(char* host, char* uri) {
 	static char buf[4096];
 	socket_t sock = socket(AF_INET, SOCK_STREAM, 0);
 	assert(sock != -1);
 	struct sockaddr_in server = {
-		.sin_addr.s_addr = inet_addr(hostname),
+		.sin_addr.s_addr = inet_addr(host),
 		.sin_family = AF_INET,
 		.sin_port = htons(80),
 	};
 	if (connect(sock, (struct sockaddr*)&server, sizeof(server)) == -1) return NULL;
-	int len = sprintf(buf, "GET %s HTTP/1.1\r\nHost: %s\r\n\r\n", path, hostname);
+	int len = sprintf(buf, "GET %s HTTP/1.1\r\nHost: %s\r\n\r\n", uri, host);
 	assert(send(sock, buf, len, 0) >= 0);
 	len = recv(sock, buf, sizeof(buf) - 1, 0);
 	if (strncmp(buf + len - 4, "\r\n\r\n", 4) == 0) {
@@ -64,18 +64,18 @@ int main(int argc, char* argv[]) {
 		puts("usage: autologin [username] [password] [interval (optional, default 10, in seconds)]");
 		return 0;
 	}
-	static char buf[256];
-	int interval = argc == 4 ? atoi(argv[3]) : 10;
-	for (char *resp, *result; ; sleep(interval)) {
-		if ((resp = GET("10.10.43.3", "/")) && (result = strstr(resp, "Dr.COMWebLoginID")) && result[17] == '0') {
-			sprintf(buf, "/drcom/"
+	char uri[256];
+	sprintf(uri, "/drcom/"
 				"login?callback=dr1003&DDDDD=%s&upass=%s&0MKKey=123456&"
 				"R1=0&R2=&R3=0&R6=0&para=00&v6ip=&terminal_type=1&lang="
 				"zh-cn&jsVersion=4.2.1&v=8321&lang=zh",
 				argv[1], urlencode((unsigned char*)argv[2]));
+	int interval = argc == 4 ? atoi(argv[3]) : 10;
+	for (char *resp, *result; ; sleep(interval)) {
+		if ((resp = GET("10.10.43.3", "/")) && (result = strstr(resp, "Dr.COMWebLoginID")) && result[17] == '0') {
 			time_t t = time(NULL);
 			fputs(ctime(&t), stdout);
-			puts((result = strstr(GET("10.10.43.3", buf), "result")) && result[8] == '1' ? "自动登录成功" : "登录失败");
+			puts((result = strstr(GET("10.10.43.3", uri), "result")) && result[8] == '1' ? "自动登录成功" : "登录失败");
 		}
 	}
 }
